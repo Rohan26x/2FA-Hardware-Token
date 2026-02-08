@@ -1,0 +1,271 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <WiFiClientSecure.h>
+#include <ArduinoJson.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SH110X.h>
+#include "time.h"
+#include <TOTP.h>
+#include <Preferences.h>
+#include <ThreeWire.h>
+#include <RtcDS1302.h>
+
+// --- USER CONFIGURATION (EDIT THIS) ---
+const char* ssid     = "iPhone";
+const char* password = "Rohan123";
+// Your Vercel URL + /api/fetch
+// Example: "https://esp32-cloud-backend.vercel.app/api/fetch"
+const char* serverUrl = "https://esp32-cloud-backend-ien0egkwm-rohan-patels-projects-f8b9837d.vercel.app/api/fetch";
+
+// --- PINS ---
+#define TOUCH_NEXT_PIN 13
+#define TOUCH_PREV_PIN 12
+#define TOUCH_SYNC_PIN 33 // <--- NEW SYNC BUTTON
+#define LED_PIN 2
+#define i2c_Address 0x3c
+
+// RTC Pins
+#define RTC_CLK 14
+#define RTC_DAT 27
+#define RTC_RST 26
+
+// --- OBJECTS ---
+Adafruit_SH1106G display = Adafruit_SH1106G(128, 64, &Wire, -1);
+Preferences preferences;
+ThreeWire myWire(RTC_DAT, RTC_CLK, RTC_RST);
+RtcDS1302<ThreeWire> Rtc(myWire);
+
+// --- GLOBALS ---
+struct Account {
+  String name;
+  String issuer;
+  String secret;
+  uint8_t hmacKey[20];
+  int keyLength;
+};
+Account myAccounts[10];
+int accountCount = 0;
+int currentAccountIndex = 0;
+
+// --- BASE32 DECODER ---
+int base32Decode(String encoded, uint8_t *result) {
+  int buffer = 0;
+  int bitsLeft = 0;
+  int count = 0;
+  const char *ptr = encoded.c_str();
+  for (; *ptr; ++ptr) {
+    uint8_t val;
+    char c = toupper(*ptr);
+    if (c >= 'A' && c <= 'Z') val = c - 'A';
+    else if (c >= '2' && c <= '7') val = c - '2' + 26;
+    else continue;
+    buffer = (buffer << 5) | val;
+    bitsLeft += 5;
+    if (bitsLeft >= 8) {
+      result[count++] = (buffer >> (bitsLeft - 8)) & 0xFF;
+      bitsLeft -= 8;
+    }
+  }
+  return count;
+}
+
+void parseAccounts(String jsonPayload) {
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, jsonPayload);
+  if (!error) {
+    accountCount = 0;
+    for (JsonObject v : doc.as<JsonArray>()) {
+      if(accountCount >= 10) break;
+      myAccounts[accountCount].name = v["name"].as<String>();
+      myAccounts[accountCount].issuer = v["issuer"].as<String>();
+      myAccounts[accountCount].secret = v["secret"].as<String>();
+      myAccounts[accountCount].keyLength = base32Decode(
+        myAccounts[accountCount].secret,
+        myAccounts[accountCount].hmacKey
+      );
+      accountCount++;
+    }
+  }
+}
+
+// --- SYNC FUNCTION (Called on Boot & Button Press) ---
+void performCloudSync() {
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.println("Connecting WiFi...");
+  display.display();
+
+  // 1. Connect WiFi
+  WiFi.begin(ssid, password);
+  int retry = 0;
+  while (WiFi.status() != WL_CONNECTED && retry < 15) { // 7.5 sec timeout
+    delay(500);
+    digitalWrite(LED_PIN, !digitalRead(LED_PIN)); // Flash LED
+    retry++;
+  }
+  digitalWrite(LED_PIN, LOW);
+
+  if (WiFi.status() != WL_CONNECTED) {
+    display.println("WiFi Failed!");
+    display.display();
+    delay(1000);
+    return;
+  }
+
+  display.println("WiFi OK! Syncing...");
+  display.display();
+
+  // 2. Sync Time (NTP -> RTC)
+  configTime(0, 0, "pool.ntp.org", "time.google.com");
+  struct tm timeinfo;
+  if(getLocalTime(&timeinfo)){
+    time_t now;
+    time(&now);
+    struct tm * t = localtime(&now);
+    RtcDateTime accurateTime(
+      t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+      t->tm_hour, t->tm_min, t->tm_sec
+    );
+    Rtc.SetDateTime(accurateTime);
+    Serial.println("RTC Updated!");
+  }
+
+  // 3. Sync Accounts (Vercel -> Flash)
+  WiFiClientSecure client;
+  client.setInsecure();
+  HTTPClient http;
+
+  // Use preferences to check if data changed
+  preferences.begin("2fa_storage", false);
+  String cachedJson = preferences.getString("json", "");
+
+  if (http.begin(client, serverUrl)) {
+    int httpCode = http.GET();
+    if (httpCode > 0) {
+      String payload = http.getString();
+      if (payload != cachedJson && payload.length() > 10) {
+        preferences.putString("json", payload);
+        parseAccounts(payload);
+        display.println("New Data Saved!");
+      } else {
+        display.println("Already Updated.");
+      }
+    } else {
+      display.println("Server Error!");
+    }
+    http.end();
+  }
+  preferences.end();
+  display.display();
+  delay(1000); // Show result
+}
+
+// --- SETUP ---
+void setInternalTimeFromRTC() {
+  RtcDateTime now = Rtc.GetDateTime();
+  struct timeval tv;
+  tv.tv_sec = now.Epoch32Time();
+  tv.tv_usec = 0;
+  settimeofday(&tv, NULL);
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(TOUCH_NEXT_PIN, INPUT);
+  pinMode(TOUCH_PREV_PIN, INPUT);
+  pinMode(TOUCH_SYNC_PIN, INPUT); // Init New Button
+  pinMode(LED_PIN, OUTPUT);
+
+  display.begin(i2c_Address, true);
+  display.clearDisplay();
+  display.setTextColor(SH110X_WHITE);
+
+  Rtc.Begin();
+  if (Rtc.GetDateTime().Year() > 2020) setInternalTimeFromRTC();
+
+  // Load Cache First
+  preferences.begin("2fa_storage", false);
+  String cachedJson = preferences.getString("json", "");
+  if (cachedJson.length() > 0) parseAccounts(cachedJson);
+  preferences.end();
+
+  // Try initial sync (optional, can remove if you want manual only)
+  performCloudSync();
+}
+
+void loop() {
+  if (accountCount == 0) {
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.println("No Accounts!");
+    display.println("Press Sync Btn");
+    display.display();
+
+    // Allow sync button even if no accounts
+    if (digitalRead(TOUCH_SYNC_PIN) == HIGH) {
+        performCloudSync();
+    }
+    delay(200);
+    return;
+  }
+
+  // --- BUTTON LOGIC ---
+  if (digitalRead(TOUCH_NEXT_PIN) == HIGH) {
+    currentAccountIndex++;
+    if (currentAccountIndex >= accountCount) currentAccountIndex = 0;
+    delay(250);
+  }
+  if (digitalRead(TOUCH_PREV_PIN) == HIGH) {
+    currentAccountIndex--;
+    if (currentAccountIndex < 0) currentAccountIndex = accountCount - 1;
+    delay(250);
+  }
+
+  // --- SYNC BUTTON LOGIC ---
+  if (digitalRead(TOUCH_SYNC_PIN) == HIGH) {
+    // Debounce to avoid accidental triggers
+    delay(100);
+    if (digitalRead(TOUCH_SYNC_PIN) == HIGH) {
+       performCloudSync();
+       // Restore time from RTC to internal clock just in case
+       setInternalTimeFromRTC();
+    }
+  }
+
+  // --- STANDARD TOTP DISPLAY ---
+  time_t now;
+  time(&now);
+  TOTP totp = TOTP(myAccounts[currentAccountIndex].hmacKey, myAccounts[currentAccountIndex].keyLength);
+  char* newCode = totp.getCode(now);
+  int secondsRemaining = 30 - (now % 30);
+
+  // LED Flash
+  if (secondsRemaining <= 10) {
+    if ((millis() / 100) % 2 == 0) digitalWrite(LED_PIN, HIGH);
+    else digitalWrite(LED_PIN, LOW);
+  } else {
+    digitalWrite(LED_PIN, LOW);
+  }
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SH110X_WHITE);
+  display.setCursor(0, 0);
+  display.printf("%s (%d/%d)", myAccounts[currentAccountIndex].issuer.c_str(), currentAccountIndex+1, accountCount);
+
+  display.setCursor(0, 12);
+  display.println(myAccounts[currentAccountIndex].name.substring(0, 15));
+
+  display.setTextSize(2);
+  display.setCursor(15, 35);
+  String c = String(newCode);
+  display.print(c.substring(0,3) + " " + c.substring(3));
+
+  display.fillRect(0, 60, map(secondsRemaining, 0, 30, 0, 128), 4, SH110X_WHITE);
+
+  if (digitalRead(TOUCH_NEXT_PIN) == HIGH) display.fillCircle(124, 30, 3, SH110X_WHITE);
+  if (digitalRead(TOUCH_PREV_PIN) == HIGH) display.fillCircle(4, 30, 3, SH110X_WHITE);
+
+  display.display();
+}

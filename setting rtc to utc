@@ -1,0 +1,60 @@
+#include <Wire.h>
+#include <RtcDS3231.h>
+
+// --- CONFIGURATION ---
+// IST is UTC + 5:30
+// To get UTC, we subtract 5 hours (18000s) and 30 minutes (1800s)
+#define IST_OFFSET_SECONDS 19785
+
+RtcDS3231<TwoWire> Rtc(Wire);
+
+void setup() {
+  Serial.begin(115200);
+
+  // 1. Initialize I2C on ESP32 Pins
+  Wire.begin(21, 22); // SDA, SCL
+
+  // 2. Initialize RTC
+  Rtc.Begin();
+
+  Serial.print("Compiling Time (Local): ");
+  Serial.print(__DATE__);
+  Serial.print(" ");
+  Serial.println(__TIME__);
+
+  // 3. Get the time from your computer (This is IST)
+  RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
+
+  // 4. Convert to UTC (Subtract 5hr 30min)
+  compiled -= IST_OFFSET_SECONDS;
+
+  // 5. Write to DS3231
+  Rtc.SetDateTime(compiled);
+
+  Serial.println("--------------------------------");
+  Serial.println("SUCCESS: RTC has been set to UTC");
+  Serial.println("--------------------------------");
+}
+
+void loop() {
+  // Print current RTC time every second to verify
+  RtcDateTime now = Rtc.GetDateTime();
+
+  char datestring[20];
+  snprintf_P(datestring,
+            countof(datestring),
+            PSTR("%02u/%02u/%04u %02u:%02u:%02u"),
+            now.Month(),
+            now.Day(),
+            now.Year(),
+            now.Hour(),
+            now.Minute(),
+            now.Second() );
+
+  Serial.print("Current RTC Time (UTC): ");
+  Serial.println(datestring);
+
+  delay(1000);
+}
+
+#define countof(a) (sizeof(a) / sizeof(a[0]))
