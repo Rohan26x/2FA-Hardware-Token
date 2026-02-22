@@ -6,8 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="b76a99d1-72db-40e1-941b-985f100a8f97" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/esp32-cloud-backend/api/index.py" beforeDir="false" afterPath="$PROJECT_DIR$/esp32-cloud-backend/api/index.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/esp32-cloud-backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/esp32-cloud-backend/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,7 +120,7 @@
       <workItem from="1771311418886" duration="159000" />
       <workItem from="1771332913837" duration="1281000" />
       <workItem from="1771353664230" duration="299000" />
-      <workItem from="1771764876948" duration="1449000" />
+      <workItem from="1771764876948" duration="2264000" />
     </task>
     <servers />
   </component>
