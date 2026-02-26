@@ -10,7 +10,7 @@ import totp_engine
 import universal_scanner
 
 # --- CONFIGURATION ---
-SERVER_URL = "https://esp32-cloud-backend-9mic9lvwo-rohan-patels-projects-f8b9837d.vercel.app/api"
+SERVER_URL = "https://esp32-cloud-backend-git-main-rohan-patels-projects-f8b9837d.vercel.app/api"
 
 # --- SESSION STORAGE ---
 session = {
@@ -33,7 +33,7 @@ class LoginScreen:
         self.on_success = on_success
 
         self.root.title("2FA Hardware Token — Login")
-        self.root.geometry("380x480")
+        self.root.geometry("380x600")
         self.root.configure(bg="#1a1a2e")
         self.root.resizable(False, False)
 
@@ -173,16 +173,21 @@ class LoginScreen:
             self.root.after(0, safe_reset)
 
     def _fetch_device_config(self):
-        """Silently fetch user_id and device_key after login."""
-        try:
-            r = requests.get(f"{SERVER_URL}/device/token",
-                             headers=get_headers(), timeout=5)
-            if r.status_code == 200:
-                data = r.json()
-                session["user_id"]    = data["user_id"]
-                session["device_key"] = data["device_key"]
-        except Exception:
-            pass  # Non-fatal — WiFi dialog will show error if missing
+        """Fetch user_id and device_key after login, with retries."""
+        for attempt in range(3):
+            try:
+                r = requests.get(f"{SERVER_URL}/device/token",
+                                 headers=get_headers(), timeout=8)
+                print(f"[device/token] status={r.status_code} body={r.text}")
+                if r.status_code == 200:
+                    data = r.json()
+                    session["user_id"]    = data["user_id"]
+                    session["device_key"] = data["device_key"]
+                    print(f"[device/token] loaded user_id={data['user_id']}")
+                    return
+            except Exception as e:
+                print(f"[device/token] attempt {attempt+1} failed: {e}")
+            time.sleep(1)
 
 
 # ============================================================
@@ -410,7 +415,7 @@ class AuthenticatorApp:
     def open_wifi_dialog(self):
         popup = tk.Toplevel(self.root)
         popup.title("Setup Hardware Token")
-        popup.geometry("400x500")
+        popup.geometry("400x650")
         popup.configure(bg="#1a1a2e")
         popup.resizable(False, False)
 

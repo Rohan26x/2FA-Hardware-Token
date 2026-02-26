@@ -12,7 +12,7 @@ app = Flask(__name__)
 SUPABASE_URL: str = "https://qiofnjxwvysnoidggxoz.supabase.co"
 SUPABASE_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpb2Zuanh3dnlzbm9pZGdneG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0ODk4MDcsImV4cCI6MjA4NjA2NTgwN30.XuPKyrLtCfksGFVuw-dkpMW6tQ-dHQE8Hc2tF7X19ow"
 JWT_SECRET   = "1476ba3a43aae90f8e0cb5ec46edf0f6551656867077135d7e77e4f3be304682"
-DEVICE_API_KEY  = "esp32-secret-x7k2p9"  # Any long random string e.g. "esp32-secret-x7k2p9"
+DEVICE_API_KEY = "YOUR_DEVICE_SECRET_KEY"  # Any long random string e.g. "esp32-secret-x7k2p9"
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
