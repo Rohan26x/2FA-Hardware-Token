@@ -5,7 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b76a99d1-72db-40e1-941b-985f100a8f97" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/firmware.ino" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/esp32-cloud-backend/api/index.py" beforeDir="false" afterPath="$PROJECT_DIR$/esp32-cloud-backend/api/index.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui_app.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui_app.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -120,7 +123,9 @@
       <workItem from="1771311418886" duration="159000" />
       <workItem from="1771332913837" duration="1281000" />
       <workItem from="1771353664230" duration="299000" />
-      <workItem from="1771764876948" duration="2264000" />
+      <workItem from="1771764876948" duration="9039000" />
+      <workItem from="1771880590332" duration="6120000" />
+      <workItem from="1772142144870" duration="978000" />
     </task>
     <servers />
   </component>
@@ -132,7 +137,7 @@
     <SUITE FILE_PATH="coverage/2FA_Hardware_Token$qr_scanner.coverage" NAME="qr_scanner Coverage Results" MODIFIED="1770490479635" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/2FA_Hardware_Token$desktop_authenticator.coverage" NAME="desktop_authenticator Coverage Results" MODIFIED="1771353679302" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/2FA_Hardware_Token$server.coverage" NAME="server Coverage Results" MODIFIED="1770526502208" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/2FA_Hardware_Token$gui_app.coverage" NAME="gui_app Coverage Results" MODIFIED="1771353721655" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/2FA_Hardware_Token$gui_app.coverage" NAME="gui_app Coverage Results" MODIFIED="1771923811124" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/2FA_Hardware_Token$migration.coverage" NAME="migration Coverage Results" MODIFIED="1770490369976" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/2FA_Hardware_Token$totp_engine.coverage" NAME="totp_engine Coverage Results" MODIFIED="1770544588022" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
