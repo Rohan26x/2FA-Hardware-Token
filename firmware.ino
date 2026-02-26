@@ -10,8 +10,9 @@
 #include <Preferences.h>
 #include <RtcDS3231.h>
 
+
 // --- SERVER ---
-const char* serverBaseUrl = "https://YOUR-PROJECT-NAME.vercel.app";
+const char* serverBaseUrl = "https://esp32-cloud-backend-git-main-rohan-patels-projects-f8b9837d.vercel.app";
 
 // --- PINS ---
 #define TOUCH_NEXT_PIN 13

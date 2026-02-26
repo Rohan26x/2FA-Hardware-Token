@@ -544,9 +544,12 @@ class AuthenticatorApp:
                                 text=msg, fg=color))
                             popup.after(0, lambda: progress_var.set(pct))
 
-                        # Wait for ESP32 to be ready
+                        # Wait for ESP32 to boot and be ready
                         update("Waiting for ESP32...", 10)
-                        time.sleep(2)
+                        time.sleep(4)
+
+                        # Flush any garbage data from boot messages
+                        ser.reset_input_buffer()
 
                         # Send WiFi SSID
                         update("Sending WiFi name...", 25)
